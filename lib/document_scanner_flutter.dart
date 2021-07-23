@@ -8,7 +8,7 @@ import 'package:flutter/services.dart';
 
 import 'configs/configs.dart';
 
-/// Dcoument Scanner Class
+/// Document Scanner Class
 class DocumentScannerFlutter {
   static MethodChannel get _channel =>
       const MethodChannel('document_scanner_flutter');
@@ -36,9 +36,13 @@ class DocumentScannerFlutter {
   ///
   /// `context` : BuildContext to attach PDF generation widgets
   /// `androidConfigs` : Android scanner labels configuration
-  static Future<File?> launchForPdf(BuildContext context,
-      {ScannerFileSource? source,
-      Map<dynamic, String> labelsConfig = const {}}) async {
+  static Future<File?> launchForPdf(BuildContext context, {
+     ScannerFileSource? source,
+     Map<dynamic, String> labelsConfig = const {},
+     Map<dynamic, dynamic> uiConfig = const {},
+     PreferredSizeWidget? customAppBar,
+     Directory? outputDirectory,
+  }) async {
     Future<File?>? launchWrapper() {
       return launch(context, labelsConfig: labelsConfig, source: source);
     }
@@ -46,7 +50,7 @@ class DocumentScannerFlutter {
     return await Navigator.push<File>(
         context,
         MaterialPageRoute(
-            builder: (_) => PdfGeneratotGallery(launchWrapper, labelsConfig)));
+            builder: (_) => PdfGeneratorGallery(launchWrapper, labelsConfig, uiConfig, customAppBar, outputDirectory)));
   }
 
   /// Scanner to get single scanned image

@@ -9,17 +9,24 @@ import 'package:path_provider/path_provider.dart';
 typedef Future<File?>? ScannerFilePicker();
 
 /// @nodoc
-class PdfGeneratotGallery extends StatefulWidget {
+class PdfGeneratorGallery extends StatefulWidget {
   final ScannerFilePicker filePicker;
   final Map<dynamic, String> labelsConfig;
+  final Map<dynamic, dynamic> uiConfig;
+  final PreferredSizeWidget? customAppBar;
+  final Directory? outputDirectory;
 
-  const PdfGeneratotGallery(this.filePicker, this.labelsConfig);
+  const PdfGeneratorGallery(
+    this.filePicker, this.labelsConfig,
+    this.uiConfig, this.customAppBar,
+    this.outputDirectory,
+  );
 
   @override
-  _PdfGeneratotGalleryState createState() => _PdfGeneratotGalleryState();
+  _PdfGeneratorGalleryState createState() => _PdfGeneratorGalleryState();
 }
 
-class _PdfGeneratotGalleryState extends State<PdfGeneratotGallery> {
+class _PdfGeneratorGalleryState extends State<PdfGeneratorGallery> {
   List<File> files = [];
 
   addImage() async {
@@ -44,11 +51,10 @@ class _PdfGeneratotGalleryState extends State<PdfGeneratotGallery> {
         ); // Center
       }));
     }
-    Directory tempDir = await getTemporaryDirectory();
+    Directory tempDir = widget.outputDirectory ?? await getTemporaryDirectory();
     try {
       tempDir.createSync();
-      final file =
-          File("${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}.pdf");
+      final file = File("${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}.pdf");
       await file.writeAsBytes(await pdf.save());
       Navigator.of(context).pop(file);
     } catch (e) {
@@ -100,15 +106,18 @@ class _PdfGeneratotGalleryState extends State<PdfGeneratotGallery> {
 
   @override
   Widget build(BuildContext context) {
-    var appBar = AppBar(
+    var appBar = widget.customAppBar != null ? widget.customAppBar! : AppBar(
       automaticallyImplyLeading: false,
+      elevation: widget.uiConfig[ScannerUIConfig.APP_BAR_ELEVATION] ?? null,
+      backgroundColor: widget.uiConfig[ScannerUIConfig.APP_BAR_BACKGROUND_COLOR] ?? null,
       title: Row(
         children: [
-          if (files.isNotEmpty) Text(itemsTitle),
+          if (files.isNotEmpty) Text(itemsTitle, style: widget.uiConfig[ScannerUIConfig.APP_BAR_TEXT_COLOR] != null ? TextStyle(color: widget.uiConfig[ScannerUIConfig.APP_BAR_TEXT_COLOR]) : null),
           if (files.isEmpty)
-            Text(widget.labelsConfig[
-                    ScannerLabelsConfig.PDF_GALLERY_EMPTY_TITLE] ??
-                "PDF Pages")
+            Text(
+               widget.labelsConfig[ScannerLabelsConfig.PDF_GALLERY_EMPTY_TITLE] ??  "PDF Pages",
+               style: widget.uiConfig[ScannerUIConfig.APP_BAR_TEXT_COLOR] != null ? TextStyle(color: widget.uiConfig[ScannerUIConfig.APP_BAR_TEXT_COLOR]) : null
+            )
         ],
       ),
     );
@@ -118,14 +127,11 @@ class _PdfGeneratotGalleryState extends State<PdfGeneratotGallery> {
         children: [
           (files.isEmpty)
               ? Center(
-                  child: Text(widget.labelsConfig[
-                          ScannerLabelsConfig.PDF_GALLERY_EMPTY_MESSAGE] ??
-                      'No scanned files available yet!'),
+                  child: Text(widget.labelsConfig[ScannerLabelsConfig.PDF_GALLERY_EMPTY_MESSAGE] ?? 'No scanned files available yet!'),
                 )
               : Container(
                   width: MediaQuery.of(context).size.width,
-                  height: MediaQuery.of(context).size.height -
-                      appBar.preferredSize.height,
+                  height: MediaQuery.of(context).size.height - appBar.preferredSize.height,
                   child: CustomScrollView(
                     primary: false,
                     slivers: <Widget>[
@@ -201,11 +207,9 @@ class _PdfGeneratotGalleryState extends State<PdfGeneratotGallery> {
                   if (files.isNotEmpty)
                     Expanded(
                         child: _mainControl(context,
-                            color: Colors.blue,
+                            color: widget.uiConfig[ScannerUIConfig.BUTTON_BACKGROUND_SECONDARY_COLOR] ?? Colors.blue,
                             icon: Icons.check,
-                            title: widget.labelsConfig[ScannerLabelsConfig
-                                    .PDF_GALLERY_DONE_LABEL] ??
-                                "Done",
+                            title: widget.labelsConfig[ScannerLabelsConfig .PDF_GALLERY_DONE_LABEL] ?? "Done",
                             textColor: Colors.white,
                             onTap: onDone,
                             radius: BorderRadius.only(
@@ -213,14 +217,10 @@ class _PdfGeneratotGalleryState extends State<PdfGeneratotGallery> {
                                 bottomLeft: Radius.circular(25)))),
                   Expanded(
                       child: _mainControl(context,
-                          color:
-                              files.isEmpty ? Colors.blue : Colors.cyanAccent,
+                          color: widget.uiConfig[ScannerUIConfig.BUTTON_BACKGROUND_PRIMARY_COLOR] ?? Colors.blue,
                           icon: Icons.add_a_photo,
-                          textColor:
-                              files.isEmpty ? Colors.white : Colors.black,
-                          title: widget.labelsConfig[ScannerLabelsConfig
-                                  .PDF_GALLERY_ADD_IMAGE_LABEL] ??
-                              "Add Image",
+                          textColor: Colors.white,
+                          title: widget.labelsConfig[ScannerLabelsConfig .PDF_GALLERY_ADD_IMAGE_LABEL] ?? "Add Image",
                           onTap: addImage,
                           radius: files.isEmpty
                               ? BorderRadius.circular(25)
